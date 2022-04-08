@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
+	"io"
 	"os"
+	"strings"
 
 	"github.com/sashaaKr/golang_command_line/todo"
 )
@@ -22,7 +25,7 @@ func main() {
 		todoFileName = os.Getenv("TODO_FILENAME")
 	}
 	
-	task := flag.String("task", "", "Task to add")
+	add := flag.Bool("add", false, "Task to add")
 	list := flag.Bool("list", false, "List all tasks")
 	complete := flag.Int("complete", 0, "Complete task")
 
@@ -49,8 +52,14 @@ func main() {
 			os.Exit(1)
 		}
 
-	case *task != "":
-		l.Add(*task)
+	case *add:
+		t, err := getTask(os.Stdin, flag.Args()...)
+		fmt.Println("got task")
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		l.Add(t)
 		if err := l.Save(todoFileName); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
@@ -61,4 +70,22 @@ func main() {
 		os.Exit(1)
 	}
 
+}
+
+func getTask(r io.Reader, args ...string) (string, error) {
+	if len(args) > 0 {
+		return strings.Join(args, " "), nil
+	}
+
+	s := bufio.NewScanner(r)
+	s.Scan()
+	if err := s.Err(); err != nil {
+		return "", err
+	}
+
+	if len(s.Text()) == 0 {
+		return "", fmt.Errorf("No task specified")
+	}
+
+	return s.Text(), nil
 }
