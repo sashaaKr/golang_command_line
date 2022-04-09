@@ -55,7 +55,6 @@ func TestTodoCLI(t *testing.T) {
 		if err := cmd.Run(); err != nil {
 			t.Fatal(err)
 		}
-
 	})
 	
 	t.Run("ListTasks", func(t *testing.T) {
@@ -87,4 +86,11 @@ func TestTodoCLI(t *testing.T) {
 		}
 	})
 
+	t.Run("DeleteTask", func(t *testing.T) {
+		cmd := exec.Command(cmdPath, "-delete", "1")
+
+		if err := cmd.Run(); err != nil {
+			t.Fatal(err)
+		}
+	})
 }
