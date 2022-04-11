@@ -15,6 +15,7 @@ type config struct {
 	size int64
 	list bool
 	wLog io.Writer
+	archive string
 }
 
 func main()	{
@@ -24,6 +25,7 @@ func main()	{
 	size := flag.Int64("size", 0, "size")
 	del := flag.Bool("del", false, "delete files")
 	logFile := flag.String("log", "", "log file")
+	archive := flag.String("archive", "", "archive file")
 
 	flag.Parse()
 
@@ -48,6 +50,7 @@ func main()	{
 		size: *size,
 		list: *list,
 		wLog: f,
+		archive: *archive,
 	}
 
 	if err := run(*root, os.Stdout, c); err != nil {
@@ -70,6 +73,12 @@ func run (root string, out io.Writer, cfg config) error {
 
 		if cfg.list {
 			return listFile(path, out)
+		}
+
+		if cfg.archive != "" {
+			if err := archiveFile(cfg.archive, root, path); err != nil {
+				return err
+			}
 		}
 
 		if cfg.del {

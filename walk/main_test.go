@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func TestRun(t *testing.T) {
@@ -152,6 +153,61 @@ func TestRunAndDelete(t *testing.T) {
 			lines := bytes.Split(logBuffer.Bytes(), []byte("\n"))
 			if len(lines) != expectedLogLines {
 				t.Errorf("expected %d log lines, got %d", expectedLogLines, len(lines))
+			}
+		})
+	}
+}
+
+func TestRunAndArchive(t *testing.T) {
+	testCases := []struct {
+		name string
+		cfg config
+		extNoArchine string
+		nArchive int
+		nNoArchive int
+	}{
+		{ name: "ArchiveExtinsionNoMatch", cfg: config{ext: ".log"}, extNoArchine: ".gz", nArchive: 0, nNoArchive: 10 },
+		{ name: "ArchiveExtinsionMatch", cfg: config{ext: ".log"}, extNoArchine: ".gz", nArchive: 10, nNoArchive: 0 },
+		{ name: "ArchiveExtinsionMixed", cfg: config{ext: ".log"}, extNoArchine: ".gz", nArchive: 5, nNoArchive: 5 },
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var buffer bytes.Buffer
+			tempDir, cleanup := createTempDir(t, map[string]int{
+				tc.cfg.ext: tc.nArchive,
+				tc.extNoArchine: tc.nNoArchive,
+			})
+			defer cleanup()
+
+			archiveDir, cleanupArchive := createTempDir(t, nil)
+			defer cleanupArchive()
+
+			tc.cfg.archive = archiveDir
+
+			if err := run(tempDir, &buffer, tc.cfg); err != nil {
+				t.Fatal(err)
+			}
+
+			pattern := filepath.Join(tempDir, fmt.Sprintf("*%s", tc.cfg.ext))
+			expFiles, err := filepath.Glob(pattern)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			expOut := strings.Join(expFiles, "\n")
+			res := strings.TrimSpace(buffer.String())
+			if expOut != res {
+				t.Errorf("expected %q, got %q", expOut, res)
+			}
+
+			filesArchived, err := ioutil.ReadDir(archiveDir)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if len(filesArchived) != tc.nArchive {
+				t.Errorf("expected %d files archived, got %d", tc.nArchive, len(filesArchived))
 			}
 		})
 	}
