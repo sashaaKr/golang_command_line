@@ -9,7 +9,7 @@ import (
 
 func main() {
 	op := flag.String("op", "sum", "operation")
-	column := flag.Int("column", 1, "column")
+	column := flag.Int("col", 1, "column")
 
 	flag.Parse()
 

@@ -1,0 +1,7 @@
+goos: darwin
+goarch: amd64
+pkg: github.com/sashaaKr/golang_command_line/colStats
+cpu: VirtualApple @ 2.50GHz
+BenchmarkRun-10    	      10	 510074279 ns/op	564341140 B/op	 5043048 allocs/op
+PASS
+ok  	github.com/sashaaKr/golang_command_line/colStats	6.201s
