@@ -6,8 +6,8 @@ import (
 )
 
 type stepErr struct {
-	msg string
-	step string
+	msg   string
+	step  string
 	cause error
 }
 
@@ -30,4 +30,5 @@ func (s *stepErr) Unwrap() error {
 
 var (
 	ErrValidation = errors.New("Validation faield")
+	ErrSignal     = errors.New("Received signal")
 )

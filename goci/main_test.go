@@ -8,7 +8,9 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -199,4 +201,64 @@ func TestHelperProcess(t *testing.T) {
 	}
 
 	os.Exit(1)
+}
+
+func testRunKill(t *testing.T) {
+	var testCases = []struct {
+		name   string
+		proj   string
+		sig    syscall.Signal
+		expErr error
+	}{
+		{"SIGINT", "./testdata/tool", syscall.SIGINT, ErrSignal},
+		{"SIGTERM", "./testdata/tool", syscall.SIGTERM, ErrSignal},
+		{"SIGQUIT", "./testdata/tool", syscall.SIGQUIT, nil}, // not handled
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			command = mockCmdTimeout
+
+			errCh := make(chan error)
+			ignSignCh := make(chan os.Signal, 1)
+			expSignCh := make(chan os.Signal, 1)
+
+			signal.Notify(ignSignCh, syscall.SIGQUIT) // ignored signal
+			defer signal.Stop(ignSignCh)
+
+			signal.Notify(expSignCh, tc.sig)
+			defer signal.Stop(expSignCh)
+
+			go func() {
+				errCh <- run(tc.proj, ioutil.Discard)
+			}()
+			go func() {
+				time.Sleep(2 * time.Second)
+				syscall.Kill(syscall.Getpid(), tc.sig)
+			}()
+
+			select {
+			case err := <-errCh:
+				if err == nil {
+					t.Errorf("expected error. got 'nil' instead")
+					return
+				}
+
+				if !errors.Is(err, tc.expErr) {
+					t.Errorf("expected error: %q. got %q instead", tc.expErr, err)
+				}
+
+				select {
+				case rec := <-expSignCh:
+					if rec != tc.sig {
+						t.Errorf("expected signal: %q. got %q instead", tc.sig, rec)
+					}
+				default:
+					t.Errorf("Signal not received")
+				}
+
+			case <-ignSignCh:
+			}
+		})
+	}
 }
