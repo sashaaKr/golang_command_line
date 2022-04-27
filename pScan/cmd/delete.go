@@ -22,6 +22,7 @@ import (
 
 	"github.com/sashaaKr/golang_command_line/pScan/scan"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // deleteCmd represents the delete command
@@ -32,10 +33,7 @@ var deleteCmd = &cobra.Command{
 	Args:         cobra.MinimumNArgs(1),
 	Short:        "Delete host(s) from list",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		hostsFile, err := cmd.Flags().GetString("hosts-file")
-		if err != nil {
-			return err
-		}
+		hostsFile := viper.GetString("hosts-file")
 
 		return deleteAction(os.Stdout, hostsFile, args)
 	},
