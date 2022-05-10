@@ -1,3 +1,6 @@
+//go:build !integration
+// +build !integration
+
 package cmd
 
 import (
@@ -193,6 +196,76 @@ func TestAddAction(t *testing.T) {
 	var out bytes.Buffer
 
 	if err := addAction(&out, url, args); err != nil {
+		t.Fatalf("Expected no error, got %q", err)
+	}
+
+	if expOut != out.String() {
+		t.Errorf("Expected output %q, got %q", expOut, out.String())
+	}
+}
+
+func TestCompleteAction(t *testing.T) {
+	exprUrlPath := "/todo/1"
+	exprMethod := http.MethodPatch
+	expQuery := "complete"
+	expOut := "Item number 1 marked as completed\n"
+	arg := "1"
+
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != exprUrlPath {
+			t.Errorf("Expected path %q, got %q", exprUrlPath, r.URL.Path)
+		}
+
+		if r.Method != exprMethod {
+			t.Errorf("Expected method %q, got %q", exprMethod, r.Method)
+		}
+
+		if _, ok := r.URL.Query()[expQuery]; !ok {
+			t.Errorf("Expected query %q, got %q", expQuery, r.URL.Query())
+		}
+
+		w.WriteHeader(testResp["noContent"].Status)
+		fmt.Fprintln(w, testResp["noContent"].Body)
+	}
+
+	url, cleanup := mockServer(handler)
+	defer cleanup()
+
+	var out bytes.Buffer
+	if err := completeAction(&out, url, arg); err != nil {
+		t.Fatalf("Expected no error, got %q", err)
+	}
+
+	if expOut != out.String() {
+		t.Errorf("Expected output %q, got %q", expOut, out.String())
+	}
+}
+
+func TestDelAction(t *testing.T) {
+	expUrlPath := "/todo/1"
+	expMethod := http.MethodDelete
+	expOut := "Item number 1 deleted\n"
+	arg := "1"
+
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != expUrlPath {
+			t.Errorf("Expected path %q, got %q", expUrlPath, r.URL.Path)
+		}
+
+		if r.Method != expMethod {
+			t.Errorf("Expected method %q, got %q", expMethod, r.Method)
+		}
+
+		w.WriteHeader(testResp["noContent"].Status)
+		fmt.Fprintln(w, testResp["noContent"].Body)
+	}
+
+	url, cleanup := mockServer(handler)
+	defer cleanup()
+
+	var out bytes.Buffer
+
+	if err := deleteAction(&out, url, arg); err != nil {
 		t.Fatalf("Expected no error, got %q", err)
 	}
 

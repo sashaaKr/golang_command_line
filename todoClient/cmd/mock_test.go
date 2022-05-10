@@ -16,13 +16,13 @@ var testResp = map[string]struct {
     {
       "Task": "Task 1",
       "Done": false,
-      "CreatedAt": "2019-10-28T08:23:38.310097076-04:00",
+      "Created": "2019-10-28T08:23:38.310097076-04:00",
       "CompletedAt": "0001-01-01T00:00:00Z"
     },
     {
       "Task": "Task 2",
       "Done": false,
-      "CreatedAt": "2019-10-28T08:23:38.323447798-04:00",
+      "Created": "2019-10-28T08:23:38.323447798-04:00",
       "CompletedAt": "0001-01-01T00:00:00Z"
     }
   ],
@@ -37,7 +37,7 @@ var testResp = map[string]struct {
     {
       "Task": "Task 1",
       "Done": false,
-      "CreatedAt": "2019-10-28T08:23:38.310097076-04:00",
+      "Created": "2019-10-28T08:23:38.310097076-04:00",
       "CompletedAt": "0001-01-01T00:00:00Z"
     }
   ],
@@ -66,6 +66,10 @@ var testResp = map[string]struct {
 	},
 	"created": {
 		Status: http.StatusCreated,
+		Body:   "",
+	},
+	"noContent": {
+		Status: http.StatusNoContent,
 		Body:   "",
 	},
 }

@@ -55,7 +55,7 @@ func viewAction(out io.Writer, apiRoot, arg string) error {
 func printOne(out io.Writer, i item) error {
 	w := tabwriter.NewWriter(out, 14, 2, 0, ' ', 0)
 	fmt.Fprintf(w, "Task:\t%s\n", i.Task)
-	fmt.Fprintf(w, "Created at:\t%s\n", i.CreatedAt.Format(timeFormat))
+	fmt.Fprintf(w, "Created at:\t%s\n", i.Created.Format(timeFormat))
 
 	if i.Done {
 		fmt.Fprintf(w, "Completed:\t%s\n", "Yes")
