@@ -22,25 +22,25 @@ const (
 )
 
 type Interval struct {
-	ID               int64
-	StartTime        time.Time
-	PlanndedDuration time.Duration
-	ActualDuration   time.Duration
-	Category         string
-	State            int
+	ID              int64
+	StartTime       time.Time
+	PlannedDuration time.Duration
+	ActualDuration  time.Duration
+	Category        string
+	State           int
 }
 
 type Repository interface {
-	Create(i Interval) (int64, error)
-	Update(i Interval) error
 	ByID(id int64) (Interval, error)
 	Last() (Interval, error)
+	Create(i Interval) (int64, error)
+	Update(i Interval) error
 	Breaks(n int) ([]Interval, error)
 }
 
 var (
 	ErrNoIntervals        = errors.New("No intervals")
-	ErrInternalNotRunning = errors.New("Interval not running")
+	ErrIntervalNotRunning = errors.New("Interval not running")
 	ErrIntervalCompleted  = errors.New("Interval is completed or cancelled")
 	ErrInvalidState       = errors.New("Invalid state")
 	ErrInvalidID          = errors.New("Invalid ID")
@@ -119,7 +119,7 @@ func tick(ctx context.Context, id int64, config *IntervalConfig, start, periodic
 		return err
 	}
 
-	expire := time.After(i.PlanndedDuration - i.ActualDuration)
+	expire := time.After(i.PlannedDuration - i.ActualDuration)
 	start(i)
 
 	for {
@@ -170,11 +170,11 @@ func newInterval(config *IntervalConfig) (Interval, error) {
 
 	switch category {
 	case CategoryPomodoro:
-		i.PlanndedDuration = config.PomodoroDuration
+		i.PlannedDuration = config.PomodoroDuration
 	case CategoryShortBreak:
-		i.PlanndedDuration = config.ShortBreakDuration
+		i.PlannedDuration = config.ShortBreakDuration
 	case CategoryLongBreak:
-		i.PlanndedDuration = config.LongBreakDuration
+		i.PlannedDuration = config.LongBreakDuration
 	}
 
 	if i.ID, err = config.repo.Create(i); err != nil {
@@ -185,10 +185,10 @@ func newInterval(config *IntervalConfig) (Interval, error) {
 }
 
 func GetInterval(config *IntervalConfig) (Interval, error) {
-	i := Interval{}
-	var err error
+	// i := Interval{}
+	// var err error
 
-	i, err = config.repo.Last()
+	i, err := config.repo.Last()
 	if err != nil && err != ErrNoIntervals {
 		return i, err
 	}
@@ -222,7 +222,7 @@ func (i Interval) Start(ctx context.Context, config *IntervalConfig, start, peri
 
 func (i Interval) Pause(config *IntervalConfig) error {
 	if i.State != StateRunning {
-		return ErrIntervalCompleted
+		return ErrIntervalNotRunning
 	}
 
 	i.State = StatePaused
